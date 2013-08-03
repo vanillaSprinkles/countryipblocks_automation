@@ -1,6 +1,6 @@
 <h2>Country IP Blocks . net List Automation</h2>
 
-<b>Automatically generate a list from www.countryipblocks.net</b>
+<b>Automatically generate a list from </b>www.countryipblocks.net
 <br>
 
 Finished ver .1 approx at 2013-08-02.20.18
