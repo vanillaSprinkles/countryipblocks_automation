@@ -1,9 +1,11 @@
 #!/bin/bash
 # makeCIBls.sh
-# ver .1
-# 2013-08-02.20.18
 # https://github.com/vanillaSprinkles/countryipblocks_automation
 # generate a list from www.countryipblocks.net
+# ver .2
+# 2013-08-05.21.28
+# ver .1
+# 2013-08-02.20.18
 
 SREPO="https://github.com/vanillaSprinkles/countryipblocks_automation"
 
