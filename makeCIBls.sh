@@ -9,7 +9,7 @@ SREPO="https://github.com/vanillaSprinkles/countryipblocks_automation"
 
 
 # load config
-source ${0%/*}/CIBls.conf
+source "${0%/*}/CIBls.conf"
 APP="makeCIBls"
 APPf="countryipblocks automation"
 APPFinalOutput="/tmp/${APP}.final.outs.txt"
@@ -31,20 +31,20 @@ ${0##*/}
 ${0##*/} (*)(print)(*)
   debug method, prints temp-output file and exits
 EOF
-exit
+exit 1
 }
 
 
 arg1=${1,,}
 if [[ -n "${@}" ]]; then
 #if [[ "${@,,}" =~ "-help" ]]; then
-  if [[ "${@,,}" =~ "print" ]]; then cat "${APPFinalOutput}"; exit; fi
+  if [[ "${@,,}" =~ "print" ]]; then cat "${APPFinalOutput}"; exit 0; fi
   help "${@}"
 fi
 
 
-
-AGENT="Mozilla/5.0 (Windows NT 6.1; WOW64; rv:22.0) Gecko/20100101 Firefox/22.0"
+while [[ $rv -lt 15 ]]; do rv=$((RANDOM %23)); done
+AGENT="Mozilla/5.0 (Windows NT 6.1; WOW64; rv:${rv}.0) Gecko/20100101 Firefox/${rv}.0"
 #AGENT="Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0"
 URL="https://www.countryipblocks.net/country_selection.php"
 REFERER="${URL}"
@@ -55,7 +55,7 @@ REFERER="${URL}"
 mkdir -p ${TWDIR}
 if ! [ -d ${TWDIR} ] || ! [ -w ${TWDIR} ]; then
     echo "cannot write to ${TWDIR}; premature exit"
-    exit
+    exit 1
 fi
 DLFILE=${TWDIR}/${APP}.grepme
 CKFILE=${TWDIR}/${APP}.cookies
@@ -74,11 +74,11 @@ REGEX="^[0-9][0-9]*$"
 if [[ "${format}" =~ ${REGEX} ]]; then
   formatI=${format}
 else
-  FORMATSrough=$(grep -Eo ".format1.\s*value=.[0-9]*.\s*.*radio.>.*</\s*label\s*>" ${DLFILE})
+  FORMATSrough=$(grep -Eo ".format1.\s*value\s*=.[0-9]*.\s*.*radio.>.*</\s*label\s*>" ${DLFILE})
   formatI=$(echo ${FORMATSrough} | grep -Eio "value=.[0-9]*.\s.*>${format}<"  | sed 's/value=.\([0-9]*\) *.*/\1/g' )
   if [ -z "$formatI"  ]; then
-    echo "bad: format=\"${format}\""
-    exit
+    echo "bad format=\"${format}\""
+    exit 1
   fi
 fi
 ## end get formatI
@@ -113,7 +113,7 @@ for Cid in "${CF[@]}"; do
 done
 Hf+="${h2}"
 ## end create "header"
-if test $DEBUG -eq 1; then echo -e '"header:" "'${Hf}'"'"\n"; exit; fi
+if test $DEBUG -eq 1; then echo -e '"header:" "'${Hf}'"'"\n"; exit 2; fi
 
 
 
@@ -130,15 +130,22 @@ if test $DEBUG -eq 0 || test $DEBUG -eq 2; then
   H1="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
   H2="Accept-Language: en-US,en;q=0.5"
   H3="Accept-Encoding: gzip, deflate"
+  
+  ## BOGONS
+  BOGON="${bogons##*/_ipv4_bogons}"
+  BURL="https://www.countryipblocks.net/bogons/${BOGON}_ipv4_bogons.txt"
+  wget --no-check-certificate --quiet -q --user-agent="${AGENT}"  --referer="https://www.countryipblocks.net/bogons.php" -p ${BURL} -O ${DLFILE}.bogons #2>/dev/null
 
   # URL="http://www.countryipblocks.net/country_selection.php"
   wget --no-check-certificate --quiet -q --user-agent="${AGENT}" --header="${H1}" --header="${H2}" --header="${H3}"  --referer=${REFERER} --load-cookies "${CKFILE}" --post-data="${Hf}" -p ${URL} -O ${DLFILE}.2 #2>/dev/null
   ## DOWNLOAD IS COMPRESSED GZIP
-  gunzip  -cd  ${DLFILE}.2 > ${DLFILE}
-  rm -f ${DLFILE}.2
+  gunzip  -cd  ${DLFILE}.2 > ${DLFILE}.extr
+
+  # append bogons, sort by ip later
+  cat ${DLFILE}.extr  ${DLFILE}.bogons > ${DLFILE}
+  rm -f ${DLFILE}.2 ${DLFILE}.bogons ${DLFILE}.extr
 fi
 ## end get The List
-
 
 
 
